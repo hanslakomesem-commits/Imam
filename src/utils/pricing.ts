@@ -1,4 +1,4 @@
-import { DurationKey, OrderRecord, TransactionStatus } from '../types';
+import { DurationKey, OrderRecord, TransactionStatus, CoverType } from '../types';
 import { DURATION_OPTIONS, EXTRA_SERVICES, ADMIN_WHATSAPP_INTL, ADMIN_WHATSAPP } from '../data/uinMaduraData';
 
 export const formatIDR = (val: number): string => {
@@ -32,7 +32,7 @@ export const formatDisplayDate = (dateStr: string): string => {
     ];
     const dayName = dayNames[dateObj.getDay()];
     const monthName = monthNames[dateObj.getMonth()];
-    return `${dayName}, ${parseInt(d)} ${monthName} ${y} pukul ${timePart || '12:00'} WIB`;
+    return `${dayName}, ${parseInt(d)} ${monthName} ${y} pukul ${timePart || '08:00'} WIB`;
   } catch {
     return dateStr;
   }
@@ -58,11 +58,15 @@ export const calculateOrderPricing = (
   coverCount: number,
   durationKey: DurationKey,
   selectedServiceIds: string[],
-  pageCount: number = 0
+  pageCount: number = 0,
+  coverType: CoverType = 'hard_cover'
 ) => {
   const durationOpt = DURATION_OPTIONS.find((d) => d.key === durationKey) || DURATION_OPTIONS[2];
   const count = Math.max(1, Math.floor(coverCount || 1));
-  const coversSubtotal = durationOpt.pricePerCover * count;
+  
+  // Soft cover: Rp 15.000 / jilid; Hard cover: based on duration
+  const pricePerCover = coverType === 'soft_cover' ? 15000 : durationOpt.pricePerCover;
+  const coversSubtotal = pricePerCover * count;
 
   const servicesBreakdown = selectedServiceIds
     .map((id) => {
@@ -95,6 +99,8 @@ export const calculateOrderPricing = (
 
   return {
     count,
+    coverType,
+    pricePerCover,
     durationOpt,
     coversSubtotal,
     servicesBreakdown,
@@ -117,19 +123,28 @@ export const createWhatsAppTextForAdmin = (order: OrderRecord): string => {
       : '';
 
   let paymentDetail = `*Status Transaksi:* [ ${order.transactionStatus} ]`;
+  paymentDetail += `\n*Biaya Print:* ${formatIDR(order.printCost)}`;
   if (order.transactionStatus === 'DP') {
-    paymentDetail += `\n*Uang Muka (DP 50%):* ${formatIDR(order.dpAmount)}\n*Sisa Tagihan Ambil:* ${formatIDR(order.remainingAmount)}`;
+    paymentDetail += `\n*Uang Muka (DP):* ${formatIDR(order.dpAmount)}\n*Sisa Tagihan Saat Ambil:* ${formatIDR(order.remainingAmount)}`;
   } else if (order.transactionStatus === 'LUNAS') {
-    paymentDetail += `\n*Nominal Lunas:* ${formatIDR(order.totalCost)}`;
+    paymentDetail += `\n*Nominal Lunas:* ${formatIDR(order.totalCost + order.printCost)} (Sudah Dibayar)`;
+  } else if (order.transactionStatus === 'Bayar Nanti') {
+    paymentDetail += `\n*Metode:* Bayar Nanti di Loket Saat Pengambilan\n*Total Bayar:* ${formatIDR(order.totalCost + order.printCost)}`;
   } else {
-    paymentDetail += `\n*Tagihan Loket:* ${formatIDR(order.totalCost)}`;
+    paymentDetail += `\n*Tagihan Loket / Transfer:* ${formatIDR(order.totalCost + order.printCost)}`;
   }
 
   const adminValidation = order.adminConfirmed
     ? `\n✅ *Status Validasi Admin:* SUDAH DIKONFIRMASI (${order.adminConfirmedBy || 'Admin'})`
     : `\n⏳ *Status Validasi Admin:* MENUNGGU KONFIRMASI ADMIN LOKET`;
 
-  return `*PESANAN MASUK - JILID SKRIPSI UIN MADURA*
+  const coverLabel = order.coverType === 'soft_cover' ? 'Soft Cover' : `Hard Cover (${order.coverColor})`;
+
+  return `*STRUK PEMBAYARAN & NOTA PESANAN - ZAIN.NET*
+================================
+*ZAIN.NET*
+Alamat: Utaranya Indomaret Uin Madura , barat jalan ,samping nya BRI Link
+WA Admin: ${ADMIN_WHATSAPP}
 ================================
 *No. Nota:* ${order.orderId}
 *Tanggal Masuk:* ${order.orderDate} WIB
@@ -138,27 +153,26 @@ export const createWhatsAppTextForAdmin = (order: OrderRecord): string => {
 • Nama Mahasiswa: ${order.studentName}
 • Fakultas: ${order.fakultas}
 • Prodi: ${order.prodi}
-• Warna Sampul: *${order.coverColor}*
+• Jenis Jilid: *${coverLabel}*
 • No. WhatsApp: https://wa.me/62${order.whatsapp.replace(/\D/g, '')}
 
 *RINCIAN ORDER:*
-• Jumlah Hard Cover: ${order.coverCount} eksemplar
-• Paket Durasi: ${order.durationLabel} (${formatIDR(order.pricePerCover)}/buku)
-• Subtotal Sampul: ${formatIDR(order.coversSubtotal)}
+• Jumlah Buku: ${order.coverCount} eksemplar
+• Jenis Jilid: ${order.coverType === 'soft_cover' ? 'Soft Cover' : 'Hard Cover'} (${formatIDR(order.pricePerCover)}/buku)
+• Subtotal Jilid: ${formatIDR(order.coversSubtotal)}
 
 *LAYANAN TAMBAHAN:*
 ${servicesList}
 • Subtotal Layanan: ${formatIDR(order.servicesSubtotal)}
-${fileText}
 --------------------------------
-*TOTAL BIAYA: ${formatIDR(order.totalCost)}*
+*TOTAL BIAYA: ${formatIDR(order.totalCost + order.printCost)}*
 ${paymentDetail}${adminValidation}
 ================================
 *JADWAL PENGAMBILAN (PASTI):*
 📅 *${formatDisplayDate(order.pickupDate)}*
+(Pukul 08:00 WIB di ZAIN.NET)
 ================================
-*Mohon Admin segera memeriksa naskah skripsi dan konfirmasi validasi pembayaran.*
-_Sistem Nota Otomatis Percetakan UIN Madura_`;
+*Tunjukkan bukti struk ini saat mengambil naskah di ZAIN.NET.*`;
 };
 
 export const getAdminWhatsAppUrl = (order: OrderRecord): string => {

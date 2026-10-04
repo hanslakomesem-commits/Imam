@@ -74,7 +74,7 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({
           <div>
             <div className="flex items-center gap-2 text-xs font-bold text-emerald-700 uppercase tracking-wider mb-1">
               <FileText className="w-4 h-4 text-emerald-600" />
-              Sistem Manajemen Loket UIN Madura
+              Sistem Manajemen Loket ZAIN.NET
             </div>
             <h2 className="text-2xl font-black text-slate-900">
               Daftar Nota & Riwayat Transaksi Jilid Skripsi
@@ -140,8 +140,9 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({
             >
               <option value="all">Semua Status Transaksi</option>
               <option value="Bayar Sekarang">Bayar Sekarang</option>
-              <option value="DP">DP (Uang Muka 50%)</option>
+              <option value="DP">DP (Uang Muka)</option>
               <option value="LUNAS">LUNAS</option>
+              <option value="Bayar Nanti">Bayar Nanti (di Loket)</option>
             </select>
           </div>
         </div>
@@ -213,10 +214,10 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({
 
                       <td className="py-4 px-4">
                         <div className="font-semibold text-slate-800">
-                          {order.coverCount} Eksemplar ({order.coverColor})
+                          {order.coverCount} Eksemplar {order.coverType === 'soft_cover' ? '(Soft Cover)' : `(${order.coverColor})`}
                         </div>
                         <div className="text-[11px] text-slate-500">
-                          {order.durationLabel}
+                          {order.coverType === 'soft_cover' ? 'Jilid Soft Cover' : order.durationLabel}
                         </div>
                         {order.selectedServices.length > 0 && (
                           <div className="text-[10px] text-amber-700 font-medium">
@@ -238,6 +239,11 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({
                             DP: {formatIDR(order.dpAmount)}
                           </div>
                         )}
+                        {order.transactionStatus === 'Bayar Nanti' && (
+                          <div className="text-[10px] font-semibold text-indigo-700">
+                            Bayar di Loket
+                          </div>
+                        )}
                       </td>
 
                       <td className="py-4 px-4">
@@ -248,6 +254,8 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({
                                 ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
                                 : order.transactionStatus === 'DP'
                                 ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                                : order.transactionStatus === 'Bayar Nanti'
+                                ? 'bg-indigo-100 text-indigo-900 border border-indigo-300'
                                 : 'bg-blue-100 text-blue-900 border border-blue-300'
                             }`}
                           >

@@ -39,7 +39,9 @@ export interface UploadedFileInfo {
   dataUrl?: string;
 }
 
-export type TransactionStatus = 'Bayar Sekarang' | 'DP' | 'LUNAS';
+export type TransactionStatus = 'Bayar Sekarang' | 'DP' | 'LUNAS' | 'Bayar Nanti';
+
+export type CoverType = 'hard_cover' | 'soft_cover';
 
 export interface OrderRecord {
   orderId: string;
@@ -48,6 +50,7 @@ export interface OrderRecord {
   prodi: string;
   coverColor: string;
   whatsapp: string;
+  coverType?: CoverType;
   coverCount: number;
   durationKey: DurationKey;
   durationLabel: string;
@@ -61,10 +64,10 @@ export interface OrderRecord {
     price: number;
   }>;
   servicesSubtotal: number;
+  printCost: number; // Manual print cost
   totalCost: number;
   orderDate: string; // YYYY-MM-DD HH:mm
   pickupDate: string; // YYYY-MM-DD HH:mm
-  uploadedFiles: UploadedFileInfo[];
   status: 'Menunggu' | 'Proses Jilid' | 'Siap Diambil' | 'Selesai';
   // Transaction and Payment specifications
   transactionStatus: TransactionStatus;

@@ -2,6 +2,8 @@ import { FacultyData, DurationOption, ExtraServiceOption } from '../types';
 
 export const ADMIN_WHATSAPP = '085231176597';
 export const ADMIN_WHATSAPP_INTL = '6285231176597';
+export const PERCETAKAN_NAME = 'ZAIN.NET';
+export const PERCETAKAN_ADDRESS = 'Utaranya Indomaret Uin Madura , barat jalan ,samping nya BRI Link';
 
 export const UIN_MADURA_FACULTIES: FacultyData[] = [
   {
@@ -141,8 +143,8 @@ export const getCoverColorInfo = (fakultasId: string, prodiName: string = '') =>
 export const JILID_OPTIONS = [
   {
     id: 'hard_cover',
-    label: 'Hard Cover (Sesuai Warna Fakultas)',
-    priceBase: 30000, // 3-day price base
+    label: 'Hard Cover',
+    priceBase: 30000,
   },
   {
     id: 'soft_cover',

@@ -26,6 +26,7 @@ const createSampleOrder = (): OrderRecord => {
     prodi: 'Pendidikan Agama Islam (PAI)',
     coverColor: 'Hijau',
     whatsapp: '81234567890',
+    coverType: 'hard_cover',
     coverCount: 3,
     durationKey: '1_day',
     durationLabel: '1 Hari Jadi',
@@ -69,7 +70,7 @@ const createSampleOrder = (): OrderRecord => {
     remainingAmount: 87000,
     adminConfirmed: true,
     adminConfirmedAt: orderDate,
-    adminConfirmedBy: 'Admin Loket Percetakan',
+    adminConfirmedBy: 'Admin ZAIN.NET',
     createdAt: Date.now() - 3600000 * 18,
   };
 };
